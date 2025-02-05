@@ -57,7 +57,8 @@ jobs:
           git clone --depth 1 https://x-access-token:${{ secrets.GH_PAT }}@github.com/${ORG_NAME}/${ORG_REPO_NAME}.git temp_repo
           cd temp_repo
           # git remote add org_repo https://x-access-token:${{ secrets.GH_PAT }}@github.com/${ORG_NAME}/${ORG_REPO_NAME}.git
-          if git ls-remote --exit-code --heads org_repo $BRANCH_NAME; then
+          # if git ls-remote --exit-code --heads org_repo $BRANCH_NAME; then
+          if git ls-remote --exit-code --heads origin $BRANCH_NAME; then
             # git fetch org_repo $BRANCH_NAME
             git fetch origin $BRANCH_NAME
             git checkout $BRANCH_NAME
