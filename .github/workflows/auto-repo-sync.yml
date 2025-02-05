@@ -57,7 +57,7 @@ jobs:
           git clone --depth 1 https://x-access-token:${{ secrets.GH_PAT }}@github.com/${ORG_NAME}/${ORG_REPO_NAME}.git temp_repo
           cd temp_repo
           git remote add org_repo https://x-access-token:${{ secrets.GH_PAT }}@github.com/${ORG_NAME}/${ORG_REPO_NAME}.git
-          git reset --hard origin/main
+          git reset --hard org_repo/$BRANCH_NAME
           git clean -fd
 
       - name: Push to Organization Repo
