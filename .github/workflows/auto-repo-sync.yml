@@ -56,11 +56,13 @@ jobs:
           git clone --branch $BRANCH_NAME --depth 1 https://x-access-token:${{ secrets.GH_PAT }}@github.com/${ORG_NAME}/${ORG_REPO_NAME}.git temp_repo || \
           git clone --depth 1 https://x-access-token:${{ secrets.GH_PAT }}@github.com/${ORG_NAME}/${ORG_REPO_NAME}.git temp_repo
           cd temp_repo
-          git remote add org_repo https://x-access-token:${{ secrets.GH_PAT }}@github.com/${ORG_NAME}/${ORG_REPO_NAME}.git
+          # git remote add org_repo https://x-access-token:${{ secrets.GH_PAT }}@github.com/${ORG_NAME}/${ORG_REPO_NAME}.git
           if git ls-remote --exit-code --heads org_repo $BRANCH_NAME; then
-            git fetch org_repo $BRANCH_NAME
+            # git fetch org_repo $BRANCH_NAME
+            git fetch origin $BRANCH_NAME
             git checkout $BRANCH_NAME
-            git reset --hard org_repo/$BRANCH_NAME
+            # git reset --hard org_repo/$BRANCH_NAME
+            git reset --hard origin/$BRANCH_NAME
           else
             git checkout -b $BRANCH_NAME
           fi
@@ -72,4 +74,5 @@ jobs:
           cd temp_repo
           git add .
           git commit -m "Automated Sync from Repo" || echo "No changes to commit"
-          git push --force org_repo $BRANCH_NAME:$BRANCH_NAME
+          # git push --force org_repo $BRANCH_NAME:$BRANCH_NAME
+          git push --force origin $BRANCH_NAME:$BRANCH_NAME
