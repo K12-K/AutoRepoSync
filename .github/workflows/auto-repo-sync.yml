@@ -45,11 +45,25 @@ jobs:
             -d '{"name": "'"${ORG_REPO_NAME}"'", "private": true}' \
             "https://api.github.com/orgs/${ORG_NAME}/repos"
 
-      - name: Push Code to Org Repo
+      - name: Configure Git User
         run: |
           git config --global user.email "your-email@example.com"
           git config --global user.name "GitHub Action"
+
+      - name: Clone Organization Repo
+        run: |
+          rm -rf temp_repo  # Clean previous attempts
           git clone --branch $BRANCH_NAME --depth 1 https://github.com/${{ github.repository }} temp_repo
           cd temp_repo
           git remote add org_repo https://x-access-token:${{ secrets.GH_PAT }}@github.com/${ORG_NAME}/${ORG_REPO_NAME}.git
+          git reset --hard origin/main
+          git clean -fd
+
+      - name: Push to Organization Repo
+        run: |
+          rsync -av --exclude='.git' . temp_repo/
+          cd temp_repo
+          git add .
+          git commit -m "Automated Sync from Personal Repo" || echo "No changes to commit"
+          git push --force origin main  # Use force push if needed
           git push --force org_repo $BRANCH_NAME:$BRANCH_NAME
