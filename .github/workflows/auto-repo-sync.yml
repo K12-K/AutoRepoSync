@@ -1,0 +1,55 @@
+name: AutoRepoSync - Sync to Org Repo
+
+on:
+  push:
+    branches:
+      - main  # Change this to the branch you want to trigger from
+
+jobs:
+  sync_repo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+      
+      - name: Set Variables
+        id: vars
+        run: |
+          ORG_NAME="Our-Deploys"  # Change this to your organization
+          REPO_NAME="${{ github.event.repository.name }}"  # Get current repo name
+          ORG_REPO_NAME="${REPO_NAME}"  # Add prefix/suffix if needed
+          echo "ORG_NAME=${ORG_NAME}" >> $GITHUB_ENV
+          echo "REPO_NAME=${REPO_NAME}" >> $GITHUB_ENV
+          echo "ORG_REPO_NAME=${ORG_REPO_NAME}" >> $GITHUB_ENV
+          echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+
+      - name: Check if Org Repo Exists
+        id: check_repo
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token ${{ secrets.GH_PAT }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${ORG_NAME}/${ORG_REPO_NAME}")
+
+          if [[ "$response" == "404" ]]; then
+            echo "EXISTS=false" >> $GITHUB_ENV
+          else
+            echo "EXISTS=true" >> $GITHUB_ENV
+          fi
+
+      - name: Create Org Repo (If Not Exists)
+        if: env.EXISTS == 'false'
+        run: |
+          curl -X POST -H "Authorization: token ${{ secrets.GH_PAT }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -d '{"name": "'"${ORG_REPO_NAME}"'", "private": true}' \
+            "https://api.github.com/orgs/${ORG_NAME}/repos"
+
+      - name: Push Code to Org Repo
+        run: |
+          git config --global user.email "your-email@example.com"
+          git config --global user.name "GitHub Action"
+          git clone --branch $BRANCH_NAME --depth 1 https://github.com/${{ github.repository }} temp_repo
+          cd temp_repo
+          git remote add org_repo https://x-access-token:${{ secrets.GH_PAT }}@github.com/${ORG_NAME}/${ORG_REPO_NAME}.git
+          git push --force org_repo $BRANCH_NAME:$BRANCH_NAME
