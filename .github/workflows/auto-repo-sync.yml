@@ -53,7 +53,8 @@ jobs:
       - name: Clone Organization Repo
         run: |
           rm -rf temp_repo  # Clean previous attempts
-          git clone --branch $BRANCH_NAME --depth 1 https://github.com/${{ github.repository }} temp_repo
+          git clone --branch $BRANCH_NAME --depth 1 https://x-access-token:${{ secrets.GH_PAT }}@github.com/${ORG_NAME}/${ORG_REPO_NAME}.git temp_repo || \
+          git clone --depth 1 https://x-access-token:${{ secrets.GH_PAT }}@github.com/${ORG_NAME}/${ORG_REPO_NAME}.git temp_repo
           cd temp_repo
           git remote add org_repo https://x-access-token:${{ secrets.GH_PAT }}@github.com/${ORG_NAME}/${ORG_REPO_NAME}.git
           git reset --hard origin/main
@@ -61,9 +62,8 @@ jobs:
 
       - name: Push to Organization Repo
         run: |
-          rsync -av --exclude='.git' . temp_repo/
+          rsync -av --exclude='.git' --exclude='.github/workflows/' . temp_repo/
           cd temp_repo
           git add .
-          git commit -m "Automated Sync from Personal Repo" || echo "No changes to commit"
-          git push --force origin main  # Use force push if needed
+          git commit -m "Automated Sync from Repo" || echo "No changes to commit"
           git push --force org_repo $BRANCH_NAME:$BRANCH_NAME
